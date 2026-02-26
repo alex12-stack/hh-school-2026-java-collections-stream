@@ -2,9 +2,9 @@ package tasks;
 
 import common.Person;
 import common.PersonService;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /*
 Задача 1
@@ -23,6 +23,17 @@ public class Task1 {
 
   public List<Person> findOrderedPersons(List<Integer> personIds) {
     Set<Person> persons = personService.findPersons(personIds);
-    return Collections.emptyList();
+
+    Map<Integer,Person> id_person = persons.stream()
+            .collect(Collectors.toMap(Person::id,p -> p));
+
+    return personIds.stream()
+            .map(id -> id_person.get(id))
+            .toList();
+    // Асимптотика: создали сет персон O(n), создали мап O(m), прошлись по персонам O(n)
+    // Итого O(n)
+    // сет хранит m элементов, мап так же m элементов, возвращаем список в худшем случае n элементов
+    // Итого O(n)
+    // Итог: O(n) по времени и памяти
   }
 }

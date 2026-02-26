@@ -26,64 +26,53 @@ public class Task9 {
   // Костыль, эластик всегда выдает в топе "фальшивую персону".
   // Конвертируем начиная со второй
   public List<String> getNames(List<Person> persons) {
-    if (persons.size() == 0) {
+    if (persons.isEmpty()) {
       return Collections.emptyList();
     }
-    persons.remove(0);
-    return persons.stream().map(Person::firstName).collect(Collectors.toList());
+    return persons.stream()
+            .skip(1)
+            .map(Person::firstName)
+            .collect(Collectors.toList());
+    // убрали remove, оставили skip
   }
 
   // Зачем-то нужны различные имена этих же персон (без учета фальшивой разумеется)
   public Set<String> getDifferentNames(List<Person> persons) {
-    return getNames(persons).stream().distinct().collect(Collectors.toSet());
+    return new HashSet<>(getNames(persons));
+    // возвращаем сразу сет
   }
 
   // Тут фронтовая логика, делаем за них работу - склеиваем ФИО
   public String convertPersonToString(Person person) {
-    String result = "";
-    if (person.secondName() != null) {
-      result += person.secondName();
-    }
-
-    if (person.firstName() != null) {
-      result += " " + person.firstName();
-    }
-
-    if (person.secondName() != null) {
-      result += " " + person.secondName();
-    }
-    return result;
+    return Stream.of(person.secondName(),person.firstName(),person.middleName())
+            .collect(Collectors.joining(" "));
   }
+  // убрали склеивание через +, реализовали через joining
 
   // словарь id персоны -> ее имя
   public Map<Integer, String> getPersonNames(Collection<Person> persons) {
-    Map<Integer, String> map = new HashMap<>(1);
+    Map<Integer, String> map = new HashMap<>(persons.size());
     for (Person person : persons) {
-      if (!map.containsKey(person.id())) {
-        map.put(person.id(), convertPersonToString(person));
-      }
+      map.putIfAbsent(person.id(),convertPersonToString(person));
     }
     return map;
+    // теперь мап изначально размера не 1, и не будет каждый раз выделяться новое место
+    // если ключа нет то сразу добавляется значение
   }
 
   // есть ли совпадающие в двух коллекциях персоны?
   public boolean hasSamePersons(Collection<Person> persons1, Collection<Person> persons2) {
-    boolean has = false;
-    for (Person person1 : persons1) {
-      for (Person person2 : persons2) {
-        if (person1.equals(person2)) {
-          has = true;
-        }
-      }
-    }
-    return has;
+    Set<Person> persons2_set = new HashSet<>(persons2);
+    return persons2_set.stream().anyMatch(persons2_set::contains);
   }
+  // создали сет из персонс2 и проверили, что есть хотя бы 1 совпадение
 
   // Посчитать число четных чисел
   public long countEven(Stream<Integer> numbers) {
-    count = 0;
-    numbers.filter(num -> num % 2 == 0).forEach(num -> count++);
-    return count;
+    return numbers
+            .filter(num -> num % 2 == 0)
+            .count();
+    // обошлись без создания лишней переменной
   }
 
   // Загадка - объясните почему assert тут всегда верен
@@ -94,5 +83,7 @@ public class Task9 {
     Collections.shuffle(integers);
     Set<Integer> set = new HashSet<>(integers);
     assert snapshot.toString().equals(set.toString());
+    // это связано с тем, что если вызвать у переменной типа Integer метод hashCode(), то мы получим само число
+    // а HashSet, в свою очередь, берет элементы в порядке их хэшкода
   }
 }
